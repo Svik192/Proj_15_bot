@@ -106,8 +106,32 @@ class Email(Field2):
         return re.match(pattern, email) is not None
 
 
+class Notes(Field2):
+    def __init__(self, value) -> None:
+        self.__value = None
+        self.value = value
+
+    @property
+    def value(self):
+        return self.__value
+
+    @value.setter
+    def value(self, value):
+        self.__value = value
+
+
 class Address(Field2):
-    pass
+    def __init__(self, value) -> None:
+        self.__value = None
+        self.value = value
+
+    @property
+    def value(self):
+        return self.__value
+
+    @value.setter
+    def value(self, value):
+        self.__value = value
 
 
 class Name(Field):
@@ -145,12 +169,13 @@ class Phone(Field):
 
 
 class Record:
-    def __init__(self, name, phone=None, birthday=None, email=None, address=None):
+    def __init__(self, name, phone=None, birthday=None, email=None, address=None, notes=None):
         self.name = Name(name)
         self.phones = [Phone(phone)] if phone else []
         self.birthday = Birthday(birthday) if birthday else None
         self.email = Email(email)
         self.address = Address(address)
+        self.notes = Notes(notes) if notes else None
 
     def days_to_birthday(self, current_date=None):
         if not current_date:
@@ -166,6 +191,7 @@ class Record:
 
     def add_phone(self, phone):
         self.phones.append(Phone(phone))
+
 
     def remove_phone(self, phone):
         for p in self.phones:
@@ -190,7 +216,8 @@ class Record:
         return None
 
     def __str__(self):
-        return f"{self.name}\t{', '.join(str(p) for p in self.phones)}\t{self.birthday}\t{self.email}\t{self.address}"
+        return (f"{self.name}\t{', '.join(str(p) for p in self.phones)}\t{self.birthday}\t{self.email}\t{self.address}\t{self.notes}")
+
 
 class AddressBook(UserDict):
     def search_contact(self, query):
@@ -242,18 +269,15 @@ def input_error(func):
 
     return wrapper
 
-
-notes = []
-
-
 @input_error
-def add_note():
-    title = input("Enter the note title: ")
-    content = input("Enter the note text: ")
-    tags = input("Enter tags (separate them with commas): ").split(', ')
-    note = {'title': title, 'content': content, 'tags': tags}
-    notes.append(note)
-    print("Note successfully added!")
+def add_note(name, notes):
+    if not address_book.find(name):
+        record = Record(name, notes=notes)  # Создаем запись с заметками
+    else:
+        record = address_book.find(name)
+        record.notes = notes  # Обновляем заметки в существующей записи
+    address_book.add_record(record)  # Добавляем или обновляем запись в адресной книге
+    return "Note successfully added!"
 
 
 @input_error
@@ -679,7 +703,10 @@ COMMANDS = {
         "Sort ": do_sort_folder,
         "Create Note": add_note,
         "Show Notes": view_notes,
-        "Help": func_help
+        "Help": func_help,
+        "Close": func_exit,
+        "Exit": func_exit,
+        "Good Bye": func_exit
 }
 address_book = AddressBook()
 
