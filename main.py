@@ -1,11 +1,9 @@
 import re
-
 import shutil
-from pathlib import Path
 import pickle as p
+from pathlib import Path
 from datetime import datetime
 from collections import UserDict
-
 from prompt_toolkit import prompt
 from prompt_toolkit.completion import WordCompleter
 
@@ -246,8 +244,10 @@ def input_error(func):
 
     return inner
 
+
 notes = []
 
+@input_error
 def add_note():
     title = input("Enter the note title: ")
     content = input("Enter the note text: ")
@@ -263,8 +263,9 @@ def add_note():
     address_book.add_record(note_record)
     print("Note successfully added!")
 
-
+@input_error
 def view_notes():
+
     #if not notes:
     if not address_book.data:
         print("No available notes.")
@@ -282,8 +283,7 @@ def view_notes():
             print(f"Text: {note['content']}")
             print(f"Tags: {', '.join(note['tags'])}")
 
-
-
+@input_error
 def search_by_tag():
     tag_to_search = input("Enter the tag to search for: ")
     matching_notes = [note for note in notes if tag_to_search.lower() in map(str.lower, note['tags'])]
@@ -402,8 +402,6 @@ def func_help():
             '"hello" - start work with bot\n' +
 
             '"add" name phone\n' +
-
-            '"add n" name phone1 phone2 ...\n' +
             '"add email" name example@mail.com ...\n' +
             '"add adr" name West 141 st. ...\n' +
             '"add brd" name 15.12.1990 ...\n' +
@@ -451,6 +449,7 @@ def func_add_email(name, email):  # function for add email
     return "Info saved successfully."
 
 
+@input_error
 def func_add_birthday(name, birthday):
     if not address_book.find(name):
         record = Record(name, birthday=birthday)
@@ -518,6 +517,7 @@ def func_hello():
     return "How can I help you?"
 
 
+@input_error
 def func_exit():
     address_book.save_data_to_disk()
     return "Good bye!"
@@ -528,6 +528,7 @@ def normalize(name: str) -> str:
     new_name = name.translate(TRANS)
     new_name = re.sub(r'\W', '_', new_name)
     return f"{new_name}.{'.'.join(extension)}"
+
 
 def get_extensions(file_name):
     return Path(file_name).suffix[1:].upper()
@@ -686,18 +687,18 @@ address_book = AddressBook()
 
 command_completer = WordCompleter(COMMANDS, ignore_case=True)
 
-def main():
 
-    print(func_help())
+def main():
 
     # load data from disk if data is available
     address_book.load_data_from_disk()
   
     while True:
+
         #user_input = input('Please, enter the valid command: ')
         # ЗАПУСКАЙТЕ ЧЕРЕЗ TERMINAL: python maim.py
         # АБО відкоментуйте рядок вище, закоментуйте нижче для виключення prompt та запуску в IDLE
-        user_input = prompt("Please, enter the valid command:", completer=command_completer)
+        user_input = prompt("Please, enter the valid command: ", completer=command_completer)
 
         if user_input.lower() in ["exit", "close", "good bye"]:
             print(func_exit())
