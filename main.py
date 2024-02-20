@@ -119,38 +119,6 @@ class Record:
             self.phones.append(Phone(phone))
 
     def days_to_birthday(birthday):
-    # Перевірка чи введено дату народження
-    if birthday:
-        # Отримання поточної дати
-        today = datetime.now().date()
-
-        # Визначення року наступного дня народження
-        next_birthday_year = today.year
-
-        # Перетворення рядка з датою народження у об'єкт datetime.date
-        # заміна року на поточний та перевірка на коректність коду
-        try:
-            birthday_this_year = datetime.strptime(birthday, '%Y-%m-%d').date().replace(year=next_birthday_year)
-        except:
-            print('Date of birth entered incorrectly')
-            return None
-        # Якщо день народження вже пройшов у поточному році, перенесення його на наступний рік
-        if today > birthday_this_year:
-            next_birthday_year += 1
-            birthday_this_year = birthday_this_year.replace(year=next_birthday_year)
-
-        # Обчислення кількості днів до наступного дня народження
-        days_left = (birthday_this_year - today).days
-
-        return days_left
-    else:
-        # Повернення значення None, якщо дата народження не була введена
-        return None
-
-  
-
-
-    def days_to_birthday(birthday):
         # Перевірка чи введено дату народження
         if birthday:
             # Отримання поточної дати
@@ -753,13 +721,7 @@ def main():
 
     # load data from disk if data is available
     address_book.load_data_from_disk()
-
-
-    r1 = Record("Jack", "0987654333", "15.01.2000", "jack.123@gmail.com", "st. Qwerty 156")
-    record = Record("Joo", "0987654321", "15.01.1990", None, "st. Qwerty 444")
-    address_book.add_record(r1)
-    address_book.add_record(record)
-
+  
     while True:
         user_input = input('Please, enter the valid command: ')
         # ЗАПУСКАЙТЕ ЧЕРЕЗ TERMINAL: python maim.py
