@@ -46,6 +46,7 @@ registered_extensions.update({i: 'audio' for i in audio_extensions})
 registered_extensions.update({i: 'documents' for i in documents_extensions})
 registered_extensions.update({i: 'archives' for i in archives_extensions})
 
+
 class Field:
     def __init__(self, value):
         self.value = value
@@ -246,26 +247,41 @@ def input_error(func):
     return inner
 
 notes = []
+
 def add_note():
     title = input("Enter the note title: ")
     content = input("Enter the note text: ")
     tags = input("Enter tags (separate them with commas): ").split(', ')
 
-    note = {'title': title, 'content': content, 'tags': tags}
-    notes.append(note)
+    # note = {'title': title, 'content': content, 'tags': tags}
+    # notes.append(note)
+    # print("Note successfully added!")'
+    note_record = Record(title)
+    note_record.notes = {'title': title, 'content': content, 'tags': tags}
+
+    # Добавляем запись в адресную книгу
+    address_book.add_record(note_record)
     print("Note successfully added!")
 
 
 def view_notes():
-    if not notes:
+    #if not notes:
+    if not address_book.data:
         print("No available notes.")
         return
 
-    for i, note in enumerate(notes):
-        print(f"\nNote {i + 1}:")
-        print(f"Title: {note['title']}")
-        print(f"Text: {note['content']}")
-        print(f"Tags: {', '.join(note['tags'])}")
+    #for i, note in enumerate(notes):
+        # print(f"\nNote {i + 1}:")
+        # print(f"Title: {note['title']}")
+        # print(f"Text: {note['content']}")
+        # print(f"Tags: {', '.join(note['tags'])}")
+    for name, record in address_book.items():
+        if hasattr(record, 'notes'):
+            note = record.notes
+            print(f"\nNote - {note['title']}:")
+            print(f"Text: {note['content']}")
+            print(f"Tags: {', '.join(note['tags'])}")
+
 
 
 def search_by_tag():
@@ -320,6 +336,7 @@ def is_valid_birthday(value):
     else:
         return False
 
+
 @input_error
 def func_change_info(name, info_type, *args):
     record = address_book.find(name)
@@ -344,7 +361,8 @@ def func_change_info(name, info_type, *args):
     
     else:
         return f"Invalid information type: {info_type}."
-        
+
+
 @input_error
 def func_delete_info(name, info_type, *args):
     
@@ -403,31 +421,6 @@ def func_help():
 
 @input_error
 def parser(user_input: str):
-    COMMANDS = {
-        "Hello": func_hello,
-
-        "Add ": func_add,
-        "Change ": func_change,
-        "Phone ": func_search,
-        "Show All": func_show_all,
-        "Delete ": func_delete,
-        "Search By Tag": search_by_tag,
-
-        "Add n": func_add_name_phones,
-        "Add Email": func_add_email,
-        "Add Adr": func_add_address,
-        "Add brd": func_add_birthday,
-        "Change": func_change_info,
-        "Phone ": func_search,
-        "Show All": func_show_all,
-        "Delete": func_delete_info,
-
-        "Search ": func_search_contacts,
-        "Sort ": do_sort_folder,
-        "Create Note": add_note,
-        "Show Notes": view_notes,
-    }
-
     user_input = user_input.title()
     for kw, command in COMMANDS.items():
         if user_input.startswith(kw):
@@ -447,9 +440,6 @@ def func_add(*args): # function for add name and phone
 
 
 @input_error
-
-def func_change(*args): # func for change pfone
-
 def func_add_email(name, email):  # function for add email
     if not address_book.find(name):
         record = Record(name, email=email)
@@ -485,8 +475,7 @@ def func_add_address(name, *address):  # function for add address
 
 
 @input_error
-def func_change(*args):  # func for change pfone
-
+def func_change(*args):
     for k, v in address_book.items():
         if k == args[0]:
             rec = address_book[args[0]]
@@ -497,14 +486,11 @@ def func_change(*args):  # func for change pfone
 @input_error
 def func_delete(*args):
     name = args[0]
-
     if name in address_book:
         address_book.delete(name)
         return f"User {name} has been deleted from the phone book"
     else:
         return f'User {name} is not in the address book'
-
-
 
 
 @input_error
@@ -666,7 +652,7 @@ def func_help():
             'Number phone in 10 numbers, for example 0001230001\n' +
             'The representation of all commands looks as follows:\n' +
             '"hello" - start work with bot\n' +
-            '"add n" name phone1 phone2 ...\n' +
+            '"add " name phone1 phone2 ...\n' +
             '"add email" name example@mail.com ...\n' +
             '"add adr" name West 141 st. ...\n' +
             '"add brd" name 15.12.1990 ...\n' +
@@ -677,43 +663,28 @@ def func_help():
             '"delete" - delete info of name\n' +
             '"search" - command for search. Just enter "search" and something about contact like name or phone')
 
-
 COMMANDS = {
-    "Help": func_help,
-    "Hello": func_hello,
-    "Add N": func_add_name_phones,
-    "Add Email": func_add_email,
-    "Add Adr": func_add_address,
-    "Add Brd": func_add_birthday,
-    "Change ": func_change,
-    "Phone ": func_search,
-    "Show All": func_show_all,
-    "Delete ": func_delete,
-    "Search ": func_search_contacts,
-    "Sort ": do_sort_folder,
-    "Exit": func_exit,
-    "Close": func_exit,
-    "Good Bye": func_exit,
-    "Days to birthday": days_to_birthday
+        "Hello": func_hello,
+        "Add ": func_add,
+        "Change ": func_change,
+        "Phone ": func_search,
+        "Show All": func_show_all,
+        "Delete ": func_delete,
+        "Search By Tag": search_by_tag,
+        "Add Email ": func_add_email,
+        "Add Adr ": func_add_address,
+        "Add brd ": func_add_birthday,
+        "Change": func_change_info,
+        "Delete": func_delete_info,
+        "Search ": func_search_contacts,
+        "Sort ": do_sort_folder,
+        "Create Note": add_note,
+        "Show Notes": view_notes,
+        "Help": func_help
 }
-
-
-@input_error
-def parser(user_input: str):
-    user_input = user_input.title()
-
-    for kw, command in COMMANDS.items():
-        if user_input.startswith(kw.title()):
-            args = user_input[len(kw):].strip().split()
-            return command, args
-    return func_unknown_command, []
-
-
-
 address_book = AddressBook()
 
 command_completer = WordCompleter(COMMANDS, ignore_case=True)
-
 
 def main():
 
@@ -723,10 +694,10 @@ def main():
     address_book.load_data_from_disk()
   
     while True:
-        user_input = input('Please, enter the valid command: ')
+        #user_input = input('Please, enter the valid command: ')
         # ЗАПУСКАЙТЕ ЧЕРЕЗ TERMINAL: python maim.py
         # АБО відкоментуйте рядок вище, закоментуйте нижче для виключення prompt та запуску в IDLE
-        # user_input = prompt("Please, enter the valid command: : ", completer=command_completer)
+        user_input = prompt("Please, enter the valid command:", completer=command_completer)
 
         if user_input.lower() in ["exit", "close", "good bye"]:
             print(func_exit())
