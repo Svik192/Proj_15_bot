@@ -75,6 +75,7 @@ class Field2:
     def __str__(self):
         return str(self.__value)
 
+
 class Birthday(Field):
     def __init__(self, value):
         self.__value = None
@@ -96,6 +97,7 @@ class Birthday(Field):
     def __repr__(self):
         return f'{self.value.strftime("%d %B %Y")}'
 
+
 class Email(Field2):
     def is_valid(self, email):
         if email is None:
@@ -103,15 +105,7 @@ class Email(Field2):
         pattern = r'^[\w\.-]+@[a-zA-Z\d\.-]+\.[a-zA-Z]{2,}'
         return re.match(pattern, email) is not None
 
-def func_add_name_phones(name, *phone_numbers):  # function for add name and phone
-    if not address_book.find(name):
-        record = Record(name)
-    else:
-        record = address_book.find(name)
-    for phone_number in phone_numbers:
-        record.add_phone(phone_number)
-    address_book.add_record(record)
-    return "Info saved successfully."
+
 class Address(Field2):
     pass
 
@@ -172,12 +166,14 @@ class Record:
 
     def add_phone(self, phone):
         self.phones.append(Phone(phone))
+
     def remove_phone(self, phone):
         for p in self.phones:
             if p.value == phone:
                 self.phones.remove(p)
                 return
         raise ValueError
+
     def edit_phone(self, old_phone, new_phone):
         for i in self.phones:
             if i.value == old_phone:
@@ -186,6 +182,7 @@ class Record:
             else:
                 raise ValueError(f'phone {old_phone} is not find for name {self.name}')
         return f'Number {old_phone} is not exist in {self.name} list'
+
     def find_phone(self, phone):
         for p in self.phones:
             if p.value == phone:
@@ -196,18 +193,6 @@ class Record:
         return f"{self.name}\t{', '.join(str(p) for p in self.phones)}\t{self.birthday}\t{self.email}\t{self.address}"
 
 class AddressBook(UserDict):
-    # def __iter__(self, n=1):
-    #     self.n = n
-    #     self.count = 0
-    #     return self
-    #
-    # def __next__(self):
-    #     self.count += 1
-    #     if self.count > self.n:
-    #         raise StopIteration
-    #     else:
-    #         for i in self.data:
-    #             yield self.data[i]
     def search_contact(self, query):
         matching_contacts = list()
         # Check if the query matches any phone numbers
@@ -221,24 +206,31 @@ class AddressBook(UserDict):
             if query.lower() in record.name.value.lower():
                 matching_contacts.append(record)
         return matching_contacts
+
     def add_record(self, record):
         self.data[record.name.value] = record
+
     def find(self, name):
         return self.data.get(name)
+
     def delete(self, name):
         if name in self.data:
             del self.data[name]
+
     def save_data_to_disk(self, filename='address_book.pickle'):
         with open(filename, 'wb') as file:
             p.dump(self.data, file)
+
     def load_data_from_disk(self, filename='address_book.pickle'):
         try:
             with open(filename, 'rb') as file:
                 self.data = p.load(file)
         except FileNotFoundError:
             return f'file {func_delete} not find.'
+
     def __str__(self) -> str:
         return "\n".join(str(r) for r in self.data.values())
+
 
 def input_error(func):
     def wrapper(*args, **kwargs):
@@ -253,21 +245,16 @@ def input_error(func):
 
 notes = []
 
+
 @input_error
 def add_note():
     title = input("Enter the note title: ")
     content = input("Enter the note text: ")
     tags = input("Enter tags (separate them with commas): ").split(', ')
-
-    # note = {'title': title, 'content': content, 'tags': tags}
-    # notes.append(note)
-    # print("Note successfully added!")'
-    note_record = Record(title)
-    note_record.notes = {'title': title, 'content': content, 'tags': tags}
-
-    # Добавляем запись в адресную книгу
-    address_book.add_record(note_record)
+    note = {'title': title, 'content': content, 'tags': tags}
+    notes.append(note)
     print("Note successfully added!")
+
 
 @input_error
 def view_notes():
@@ -277,17 +264,12 @@ def view_notes():
         print("No available notes.")
         return
 
-    #for i, note in enumerate(notes):
-        # print(f"\nNote {i + 1}:")
-        # print(f"Title: {note['title']}")
-        # print(f"Text: {note['content']}")
-        # print(f"Tags: {', '.join(note['tags'])}")
-    for name, record in address_book.items():
-        if hasattr(record, 'notes'):
-            note = record.notes
-            print(f"\nNote - {note['title']}:")
-            print(f"Text: {note['content']}")
-            print(f"Tags: {', '.join(note['tags'])}")
+    for i, note in enumerate(notes):
+        print(f"\nNote {i + 1}:")
+        print(f"Title: {note['title']}")
+        print(f"Text: {note['content']}")
+        print(f"Tags: {', '.join(note['tags'])}")
+
 
 @input_error
 def search_by_tag():
@@ -341,6 +323,18 @@ def is_valid_birthday(value):
             return False
     else:
         return False
+
+
+@input_error
+def func_add_name_phones(name, *phone_numbers):  # function for add name and phone
+    if not address_book.find(name):
+        record = Record(name)
+    else:
+        record = address_book.find(name)
+    for phone_number in phone_numbers:
+        record.add_phone(phone_number)
+    address_book.add_record(record)
+    return "Info saved successfully."
 
 
 @input_error
