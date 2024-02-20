@@ -53,6 +53,28 @@ class Field:
         return str(self.value)
 
 
+class Field2:
+    def __init__(self, value):
+        self.__value = None
+        self.value = value
+
+    def is_valid(self, value):
+        return True
+
+    @property
+    def value(self):
+        return self.__value
+
+    @value.setter
+    def value(self, value):
+        if self.is_valid(value):
+            self.__value = value
+        else:
+            raise ValueError("Invalid value")
+
+    def __str__(self):
+        return str(self.__value)
+
 class Birthday(Field):
     def __init__(self, value):
         self.__value = None
@@ -73,6 +95,25 @@ class Birthday(Field):
 
     def __repr__(self):
         return f'{self.value.strftime("%d %B %Y")}'
+
+class Email(Field2):
+    def is_valid(self, email):
+        if email is None:
+            return True
+        pattern = r'^[\w\.-]+@[a-zA-Z\d\.-]+\.[a-zA-Z]{2,}'
+        return re.match(pattern, email) is not None
+
+def func_add_name_phones(name, *phone_numbers):  # function for add name and phone
+    if not address_book.find(name):
+        record = Record(name)
+    else:
+        record = address_book.find(name)
+    for phone_number in phone_numbers:
+        record.add_phone(phone_number)
+    address_book.add_record(record)
+    return "Info saved successfully."
+class Address(Field2):
+    pass
 
 
 class Name(Field):
@@ -110,61 +151,41 @@ class Phone(Field):
 
 
 class Record:
-    def __init__(self, name, phone=None, email=None, birthday=None):
+    def __init__(self, name, phone=None, birthday=None, email=None, address=None):
         self.name = Name(name)
-        self.phones = []
-        self.email = email
+        self.phones = [Phone(phone)] if phone else []
         self.birthday = Birthday(birthday) if birthday else None
-        if phone is not None:
-            self.phones.append(Phone(phone))
+        self.email = Email(email)
+        self.address = Address(address)
 
-    def days_to_birthday(birthday):
-        # Перевірка чи введено дату народження
-        if birthday:
-            # Отримання поточної дати
-            today = datetime.now().date()
-
-            # Визначення року наступного дня народження
-            next_birthday_year = today.year
-
-            # Перетворення рядка з датою народження у об'єкт datetime.date
-            # заміна року на поточний та перевірка на коректність коду
-            try:
-                birthday_this_year = datetime.strptime(birthday, '%Y-%m-%d').date().replace(year=next_birthday_year)
-            except:
-                return 'Date of birth entered incorrectly'
-            # Якщо день народження вже пройшов у поточному році, перенесення його на наступний рік
-            if today > birthday_this_year:
-                next_birthday_year += 1
-                birthday_this_year = birthday_this_year.replace(year=next_birthday_year)
-
-            # Обчислення кількості днів до наступного дня народження
-            days_left = (birthday_this_year - today).days
-
-            return days_left
+    def days_to_birthday(self, current_date=None):
+        if not current_date:
+            current_date = datetime.now().date()
+        if self.birthday:
+            next_birthday = datetime.strptime(str(self.birthday), '%d.%m.%Y').date().replace(year=current_date.year)
+            if current_date > next_birthday:
+                next_birthday = next_birthday.replace(year=current_date.year + 1)
+            days_remaining = (next_birthday - current_date).days
+            return f"Days till the next Birthday for {self.name}: {days_remaining} days"
         else:
-            # Повернення значення None, якщо дата народження не була введена
-            return 'Date of birth entered incorrectly'
+            return "Birth date not added"
 
     def add_phone(self, phone):
         self.phones.append(Phone(phone))
-
     def remove_phone(self, phone):
         for p in self.phones:
             if p.value == phone:
                 self.phones.remove(p)
                 return
         raise ValueError
-
     def edit_phone(self, old_phone, new_phone):
         for i in self.phones:
             if i.value == old_phone:
                 i.value = new_phone
-                return f'Number {old_phone} from {self.name}`s list changed to {new_phone}'
+                return f'Number {old_phone} from {self.name}\'s list changed to {new_phone}'
             else:
                 raise ValueError(f'phone {old_phone} is not find for name {self.name}')
         return f'Number {old_phone} is not exist in {self.name} list'
-
     def find_phone(self, phone):
         for p in self.phones:
             if p.value == phone:
@@ -172,77 +193,62 @@ class Record:
         return None
 
     def __str__(self):
-        return f"Name: {self.name.value}, phones: {', '.join(str(p) for p in self.phones)}"
-
+        return f"{self.name}\t{', '.join(str(p) for p in self.phones)}\t{self.birthday}\t{self.email}\t{self.address}"
 
 class AddressBook(UserDict):
-    def __iter__(self, n):
-        self.n = n
-        self.count = 0
-        return self
-
-    def __next__(self):
-        self.count += 1
-        if self.count > self.n:
-            raise StopIteration
-        else:
-            for i in self.data:
-                yield self.data[i]
-
+    # def __iter__(self, n=1):
+    #     self.n = n
+    #     self.count = 0
+    #     return self
+    #
+    # def __next__(self):
+    #     self.count += 1
+    #     if self.count > self.n:
+    #         raise StopIteration
+    #     else:
+    #         for i in self.data:
+    #             yield self.data[i]
     def search_contact(self, query):
         matching_contacts = list()
-
         # Check if the query matches any phone numbers
         for record in self.data.values():
             for phone in record.phones:
                 if query in phone.value:
                     matching_contacts.append(record)
                     break
-
         # Check if the query matches any names
         for record in self.data.values():
             if query.lower() in record.name.value.lower():
                 matching_contacts.append(record)
-
         return matching_contacts
-
     def add_record(self, record):
         self.data[record.name.value] = record
-
     def find(self, name):
         return self.data.get(name)
-
     def delete(self, name):
         if name in self.data:
             del self.data[name]
-
     def save_data_to_disk(self, filename='address_book.pickle'):
         with open(filename, 'wb') as file:
             p.dump(self.data, file)
-
     def load_data_from_disk(self, filename='address_book.pickle'):
         try:
             with open(filename, 'rb') as file:
                 self.data = p.load(file)
         except FileNotFoundError:
             return f'file {func_delete} not find.'
-
     def __str__(self) -> str:
         return "\n".join(str(r) for r in self.data.values())
 
-
 def input_error(func):
-    def inner(*args):
+    def wrapper(*args, **kwargs):
         try:
-            return func(*args)
-        except IndexError:
-            return "Not enough params"
-        except KeyError:
-            return f"There is no contact such in phone book."
-        except ValueError:
-            return "Not enough params or wrong phone format"
+            return func(*args, **kwargs)
+        except (TypeError, KeyError, ValueError, IndexError) as e:
+            return type(e).__name__, e
+            # return f"Error: {e}"
 
-    return inner
+    return wrapper
 
 
 notes = []
@@ -438,11 +444,12 @@ def func_add(*args): # function for add name and phone
 
 
 def func_add_email(name, email):
-    record = address_book.find(name)
+
     if not address_book.find(name):
         record = Record(name, email=email)
     else:
-        record.email = email
+        record = address_book.find(name)
+    record.email = email
     address_book.add_record(record)
     return "Email saved successfully."
 
@@ -663,7 +670,7 @@ def func_help():
 
 COMMANDS = {
         "Hello": func_hello,
-        "Add ": func_add,
+        "Add N ": func_add_name_phones,
         "Change ": func_change,
         "Phone ": func_search,
         "Show All": func_show_all,
