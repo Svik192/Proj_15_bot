@@ -693,7 +693,7 @@ COMMANDS = {
         "Phone ": func_search,
         "Show All": func_show_all,
         "Delete ": func_delete,
-        "Search By Tag": search_by_tag,
+        "Search By Tag": func_search, #search_by_tag,
         "Add Email ": func_add_email,
         "Add Adr ": func_add_address,
         "Add brd ": func_add_birthday,
