@@ -110,9 +110,10 @@ class Phone(Field):
 
 
 class Record:
-    def __init__(self, name, phone=None, birthday=None):
+    def __init__(self, name, phone=None, email=None, birthday=None):
         self.name = Name(name)
         self.phones = []
+        self.email = email
         self.birthday = Birthday(birthday) if birthday else None
         if phone is not None:
             self.phones.append(Phone(phone))
@@ -144,7 +145,6 @@ class Record:
         else:
             # Повернення значення None, якщо дата народження не була введена
             return 'Date of birth entered incorrectly'
-
 
     def add_phone(self, phone):
         self.phones.append(Phone(phone))
@@ -437,19 +437,16 @@ def func_add(*args): # function for add name and phone
     return "Info saved successfully."
 
 
-@input_error
-def func_add_email(name, email):  # function for add email
+def func_add_email(name, email):
+    record = address_book.find(name)
     if not address_book.find(name):
         record = Record(name, email=email)
     else:
-        record = address_book.find(name)
-
-    record.email = email
+        record.email = email
     address_book.add_record(record)
-    return "Info saved successfully."
+    return "Email saved successfully."
 
 
-@input_error
 def func_add_birthday(name, birthday):
     if not address_book.find(name):
         record = Record(name, birthday=birthday)
@@ -458,7 +455,7 @@ def func_add_birthday(name, birthday):
         record.birthday = Birthday(birthday)
 
     address_book.add_record(record)
-    return "Info saved successfully."
+    return "Birthday saved successfully."
 
 
 @input_error
