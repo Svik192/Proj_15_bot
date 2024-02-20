@@ -121,17 +121,10 @@ class Notes(Field2):
 
 
 class Address(Field2):
-    def __init__(self, value) -> None:
-        self.__value = None
-        self.value = value
-
-    @property
-    def value(self):
-        return self.__value
-
-    @value.setter
-    def value(self, value):
-        self.__value = value
+    # def __init__(self, value) -> None:
+    #     self._value = None
+    #     self.value = value
+    pass
 
 
 class Name(Field):
@@ -216,7 +209,7 @@ class Record:
         return None
 
     def __str__(self):
-        return (f"{self.name}\t{', '.join(str(p) for p in self.phones)}\t{self.birthday}\t{self.email}\t{self.address}\t{self.notes}")
+        return (f"{self.name}\t{', '.join(str(p) for p in self.phones)}\t{self.birthday}\t{self.email}\t{self.address}")
 
 
 class AddressBook(UserDict):
