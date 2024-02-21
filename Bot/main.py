@@ -716,7 +716,7 @@ def func_help():
 
 COMMANDS = {
         "Hello": func_hello,
-        "Add N ": func_add_name_phones,
+        "Add Contact ": func_add_name_phones,
         "Change ": func_change,
         "Phone ": func_search,
         "Show All": func_show_all,
