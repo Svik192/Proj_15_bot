@@ -8,8 +8,10 @@ from prompt_toolkit import prompt
 from prompt_toolkit.completion import WordCompleter
 
 UKRAINIAN_SYMBOLS = 'абвгдеєжзиіїйклмнопрстуфхцчшщьюя'
-TRANSLATION = ("a", "b", "v", "g", "d", "e", "je", "zh", "z", "y", "i", "ji", "j", "k", "l", "m", "n", "o", "p", "r", "s", "t", "u",
-               "f", "h", "ts", "ch", "sh", "sch", "", "ju", "ja")
+TRANSLATION = (
+    "a", "b", "v", "g", "d", "e", "je", "zh", "z", "y", "i", "ji", "j", "k", "l", "m", "n", "o", "p", "r", "s", "t",
+    "u",
+    "f", "h", "ts", "ch", "sh", "sch", "", "ju", "ja")
 TRANS = {}
 for key, value in zip(UKRAINIAN_SYMBOLS, TRANSLATION):
     TRANS[ord(key)] = value
@@ -32,9 +34,9 @@ documents_extensions = ['DOC', 'DOCX', 'TXT', 'PDF', 'XLSX', 'PPTX']
 archives_extensions = ['ZIP', 'GZ', 'TAR']
 
 list_of_all_extensions = (
-    image_extensions + video_extensions +
-    audio_extensions + documents_extensions +
-    archives_extensions
+        image_extensions + video_extensions +
+        audio_extensions + documents_extensions +
+        archives_extensions
 )
 
 registered_extensions = dict()
@@ -121,10 +123,9 @@ class Notes(Field2):
 
 
 class Address(Field2):
-    # def __init__(self, value) -> None:
-    #     self._value = None
-    #     self.value = value
     pass
+    # def __str__(self):
+    #     return str(self.__value)
 
 
 class Name(Field):
@@ -155,7 +156,7 @@ class Phone(Field):
         if is_valid_phone(value) and value.isdigit() and len(value) == 10:
             self.__value = value
         else:
-            raise ValueError
+            raise ValueError("Incorrect phone format. Must be 10 digits")
 
     def __repr__(self):
         return f'{self.value}'
@@ -167,7 +168,7 @@ class Record:
         self.phones = [Phone(phone)] if phone else []
         self.birthday = Birthday(birthday) if birthday else None
         self.email = Email(email)
-        self.address = Address(address)
+        self.address = Address(address) if phone else None
         self.notes = Notes(notes) if notes else None
 
     def days_to_birthday(self, current_date=None):
@@ -184,7 +185,6 @@ class Record:
 
     def add_phone(self, phone):
         self.phones.append(Phone(phone))
-
 
     def remove_phone(self, phone):
         for p in self.phones:
@@ -216,6 +216,7 @@ class AddressBook(UserDict):
     def __init__(self):
         super().__init__()
         self.notes = []
+
     def search_contact(self, query):
         matching_contacts = list()
         # Check if the query matches any phone numbers
@@ -261,9 +262,9 @@ def input_error(func):
             return func(*args, **kwargs)
         except (TypeError, KeyError, ValueError, IndexError) as e:
             return type(e).__name__, e
-            # return f"Error: {e}"
 
     return wrapper
+
 
 @input_error
 def add_note(title, content):
@@ -297,6 +298,7 @@ def search_by_tag():
     else:
         print(f"No notes found with tag '{tag_to_search}'.")
 
+
 @input_error
 def edit_note(note_index_str, new_content):
     note_index = int(note_index_str) - 1  # Convert index to integer
@@ -305,6 +307,7 @@ def edit_note(note_index_str, new_content):
         return "Note edited successfully!"
     else:
         return "Invalid note index. Please provide a valid index."
+
 
 @input_error
 def remove_note(note_index_str):
@@ -315,6 +318,7 @@ def remove_note(note_index_str):
     else:
         return "Invalid note index. Please provide a valid index."
 
+
 @input_error
 def func_search_contacts(*args):
     query = args[0]
@@ -324,7 +328,7 @@ def func_search_contacts(*args):
         result = '\n'.join(str(record) for record in matching_contacts)
         return f'Matching contacts: \n{result}'
     else:
-        return  f'No contacts found for query: {query}'
+        return f'No contacts found for query: {query}'
 
 
 @input_error
@@ -341,7 +345,7 @@ def is_valid_phone(phone):
 @input_error
 def is_valid_birthday(value):
     pattern = r'\d{2}\.\d{2}\.\d{4}'
-    search = re.findall(pattern,value)
+    search = re.findall(pattern, value)
     if value == search[0]:
         day, month, year = value.split(".")
         try:
@@ -354,7 +358,7 @@ def is_valid_birthday(value):
 
 
 @input_error
-def func_add_name_phones(name, *phone_numbers):  # function for add name and phone
+def func_add_contact(name, *phone_numbers):  # function for add name and phone
     if not address_book.find(name):
         record = Record(name)
     else:
@@ -370,36 +374,35 @@ def func_change_info(name, info_type, *args):
     record = address_book.find(name)
     if not record:
         return f"Contact '{name}' not found."
-    
+
     if info_type.lower() == 'phone':
         old_phone, new_phone = args
         return record.edit_phone(old_phone, new_phone)
-    
+
     elif info_type.lower() == 'email':
         new_email = args[0]
         record.email = new_email
         address_book.add_record(record)
         return f"Email for '{name}' changed to '{new_email}'."
-    
+
     elif info_type.lower() == 'birthday':
         new_birthday = args[0]
         record.birthday.value = new_birthday
         address_book.add_record(record)
         return f"Birthday for '{name}' changed to '{new_birthday}'."
-    
+
     else:
         return f"Invalid information type: {info_type}."
 
 
 @input_error
 def func_delete_info(name, info_type, *args):
-    
     record = address_book.find(name)
     if not record:
         return f"Contact '{name}' not found."
-    
+
     if info_type.lower() == 'phone':
-        phone_to_delete = ' '.join(args) 
+        phone_to_delete = ' '.join(args)
         print("Phone to delete:", phone_to_delete)
         try:
             record.remove_phone(phone_to_delete)
@@ -407,42 +410,19 @@ def func_delete_info(name, info_type, *args):
             return f"Phone number '{phone_to_delete}' deleted for '{name}'."
         except ValueError:
             return f"Phone number '{phone_to_delete}' not found for '{name}'."
-    
+
     elif info_type.lower() == 'email':
         record.email = None
         address_book.add_record(record)
         return f"Email deleted for '{name}'."
-    
+
     elif info_type.lower() == 'birthday':
         record.birthday = None
         address_book.add_record(record)
         return f"Birthday deleted for '{name}'."
-    
+
     else:
         return f"Invalid information type: {info_type}."
-
-
-@input_error
-def func_help():
-    return ('Hi! If you want to start working, just enter "hello"\n' +
-            'Number phone in 10 numbers, for example 0001230001\n' +
-            'The representation of all commands looks as follows:\n' +
-            '"hello" - start work with bot\n' +
-
-            '"add" name phone\n' +
-            '"add email" name example@mail.com ...\n' +
-            '"add adr" name West 141 st. ...\n' +
-            '"add brd" name 15.12.1990 ...\n' +
-
-            '"change" name old_phone new_phone\n' +
-            '"phone" name\n' +
-            '"show all" - for show all information\n' +
-            '"good bye", "close", "exit" - for end work\n' +
-            '"delete" - delete info of name\n' +
-            '"search" - command for search. Just enter "search" and something about contact like name or phone\n' +
-            '"create note" - command for creating note\n' +
-            '"search by tag" - command for searching note by tag\n' +
-            '"show notes" - command for show all available notes\n')
 
 
 @input_error
@@ -455,7 +435,7 @@ def parser(user_input: str):
 
 
 @input_error
-def func_add(*args): # function for add name and phone
+def func_add(*args):  # function for add name and phone
     name = args[0]
     record = Record(name)
     phone_numbers = args[1:]
@@ -464,9 +444,8 @@ def func_add(*args): # function for add name and phone
     address_book.add_record(record)
     return "Info saved successfully."
 
-
+@input_error
 def func_add_email(name, email):
-
     if not address_book.find(name):
         record = Record(name, email=email)
     else:
@@ -475,7 +454,7 @@ def func_add_email(name, email):
     address_book.add_record(record)
     return "Email saved successfully."
 
-
+@input_error
 def func_add_birthday(name, birthday):
     if not address_book.find(name):
         record = Record(name, birthday=birthday)
@@ -519,7 +498,7 @@ def func_delete(*args):
 
 
 @input_error
-def func_search(*args): # шукає інформацію про користувачів за декілька символів
+def func_search(*args):  # шукає інформацію про користувачів за декілька символів
     name = args[0]
     record = address_book.find(name)
     if record:
@@ -530,7 +509,11 @@ def func_search(*args): # шукає інформацію про користу�
 
 @input_error
 def func_show_all(*args):
-    return str(address_book)
+    if not address_book:
+        return "No contacts available."
+
+    return f"All contacts:\n{str(address_book)}\n"
+
 
 
 @input_error
@@ -569,7 +552,7 @@ def scan(folder):
             continue
 
         extension = get_extensions(file_name=item.name)
-        new_name = folder/item.name
+        new_name = folder / item.name
         if not extension:
             other.append(new_name)
         else:
@@ -679,40 +662,46 @@ def func_help():
             'Number phone in 10 numbers, for example 0001230001\n' +
             'The representation of all commands looks as follows:\n' +
             '"hello" - start work with bot\n' +
-            '"add " name phone1 phone2 ...\n' +
+
+            '"add" name phone\n' +
             '"add email" name example@mail.com ...\n' +
             '"add adr" name West 141 st. ...\n' +
             '"add brd" name 15.12.1990 ...\n' +
+
             '"change" name old_phone new_phone\n' +
             '"phone" name\n' +
             '"show all" - for show all information\n' +
             '"good bye", "close", "exit" - for end work\n' +
             '"delete" - delete info of name\n' +
-            '"search" - command for search. Just enter "search" and something about contact like name or phone')
+            '"search" - command for search. Just enter "search" and something about contact like name or phone\n' +
+            '"create note" - command for creating note\n' +
+            '"search by tag" - command for searching note by tag\n' +
+            '"show notes" - command for show all available notes\n')
+
 
 COMMANDS = {
-        "Hello": func_hello,
-        "Add N ": func_add_name_phones,
-        "Change ": func_change,
-        "Phone ": func_search,
-        "Show All": func_show_all,
-        "Delete ": func_delete,
-        "Search By Tag": func_search, #search_by_tag,
-        "Add Email ": func_add_email,
-        "Add Adr ": func_add_address,
-        "Add brd ": func_add_birthday,
-        "Change": func_change_info,
-        "Delete": func_delete_info,
-        "Search ": func_search_contacts,
-        "Sort ": do_sort_folder,
-        "Create Note": add_note,
-        "Show Notes": view_notes,
-        "Edit Note": edit_note,
-        "Remove Note": remove_note,
-        "Help": func_help,
-        "Close": func_exit,
-        "Exit": func_exit,
-        "Good Bye": func_exit
+    "Hello": func_hello,
+    "Add Contact ": func_add_contact,
+    "Change ": func_change,
+    "Phone ": func_search,
+    "Show All": func_show_all,
+    "Delete ": func_delete,
+    "Search By Tag": func_search,  # search_by_tag,
+    "Add Email ": func_add_email,
+    "Add Adr ": func_add_address,
+    "Add brd ": func_add_birthday,
+    "Change": func_change_info,
+    "Delete": func_delete_info,
+    "Search ": func_search_contacts,
+    "Sort ": do_sort_folder,
+    "Create Note": add_note,
+    "Show Notes": view_notes,
+    "Edit Note": edit_note,
+    "Remove Note": remove_note,
+    "Help": func_help,
+    "Close": func_exit,
+    "Exit": func_exit,
+    "Good Bye": func_exit
 }
 address_book = AddressBook()
 
@@ -720,15 +709,15 @@ command_completer = WordCompleter(COMMANDS, ignore_case=True)
 
 
 def main():
-
     # load data from disk if data is available
     address_book.load_data_from_disk()
-  
+
     while True:
 
         #user_input = input('Please, enter the valid command: ')
         # ЗАПУСКАЙТЕ ЧЕРЕЗ TERMINAL: python maim.py
         # АБО відкоментуйте рядок вище, закоментуйте нижче для виключення prompt та запуску в IDLE
+        # pip install prompt_toolkit
         user_input = prompt("Please, enter the valid command: ", completer=command_completer)
 
         if user_input.lower() in ["exit", "close", "good bye"]:
