@@ -714,13 +714,13 @@ def func_help():
             '"delete" - delete info of name\n' +
             '"search" - command for search. Just enter "search" and something about contact like name or phone\n'+
             '"sort" - way to path\n' +
-            'search by tag - enter tag\n' +
-            'create note - title content\n' +
-            'show note - just show all notes\n' +
-            'edit note - note_index_str and new_content\n' +
-            'remove note - note_index_str\n' +
-            'help - get help for commands\n' +
-            'close, exit, good bye - for quit from bot')
+            '"search by tag" - enter tag\n' +
+            '"create note" - title content\n' +
+            '"show note" - just show all notes\n' +
+            '"edit note" - note_index_str and new_content\n' +
+            '"remove note" - note_index_str\n' +
+            '"help" - get help for commands\n' +
+            '"close, exit, good bye" - for quit from bot')
 
 
 COMMANDS = {
