@@ -227,6 +227,10 @@ class AddressBook(UserDict):
                 matching_contacts.append(record)
         return matching_contacts
 
+      def __init__(self):
+        super().__init__()
+        self.notes = []
+
     def add_record(self, record):
         self.data[record.name.value] = record
 
@@ -263,29 +267,20 @@ def input_error(func):
     return wrapper
 
 @input_error
-def add_note(name, notes):
-    if not address_book.find(name):
-        record = Record(name, notes=notes)  # Создаем запись с заметками
-    else:
-        record = address_book.find(name)
-        record.notes = notes  # Обновляем заметки в существующей записи
-    address_book.add_record(record)  # Добавляем или обновляем запись в адресной книге
+def add_note(title, content):
+    address_book.notes.append({"title": title, "content": content})
     return "Note successfully added!"
 
 
 @input_error
 def view_notes():
-
-    #if not notes:
-    if not address_book.data:
-        print("No available notes.")
-        return
-
-    for i, note in enumerate(notes):
-        print(f"\nNote {i + 1}:")
-        print(f"Title: {note['title']}")
-        print(f"Text: {note['content']}")
-        print(f"Tags: {', '.join(note['tags'])}")
+    if not address_book.notes:
+        return "No available notes."
+    else:
+        for i, note in enumerate(address_book.notes):
+            print(f"\nNote {i + 1}:")
+            print(f"Title: {note['title']}")
+            print(f"Content: {note['content']}")
 
 
 @input_error
@@ -303,6 +298,23 @@ def search_by_tag():
     else:
         print(f"No notes found with tag '{tag_to_search}'.")
 
+@input_error
+def edit_note(note_index_str, new_content):
+    note_index = int(note_index_str) - 1  # Convert index to integer
+    if 0 <= note_index < len(address_book.notes):
+        address_book.notes[note_index]["content"] = new_content
+        return "Note edited successfully!"
+    else:
+        return "Invalid note index. Please provide a valid index."
+
+@input_error
+def remove_note(note_index_str):
+    note_index = int(note_index_str) - 1  # Convert index to integer
+    if 0 <= note_index < len(address_book.notes):
+        del address_book.notes[note_index]
+        return "Note removed successfully!"
+    else:
+        return "Invalid note index. Please provide a valid index."
 
 @input_error
 def func_search_contacts(*args):
@@ -696,6 +708,8 @@ COMMANDS = {
         "Sort ": do_sort_folder,
         "Create Note": add_note,
         "Show Notes": view_notes,
+        "Edit Note": edit_note,
+        "Remove Note": remove_note,
         "Help": func_help,
         "Close": func_exit,
         "Exit": func_exit,
