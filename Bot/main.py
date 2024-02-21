@@ -1,5 +1,7 @@
 import re
 import shutil
+import pickle
+import atexit
 import pickle as p
 from pathlib import Path
 from datetime import datetime
@@ -230,8 +232,23 @@ class AddressBook(UserDict):
                 matching_contacts.append(record)
         return matching_contacts
 
+    def __init__(self):
+        super().__init__()
+        self.notes = []
+
     def add_record(self, record):
         self.data[record.name.value] = record
+
+    def save_notes(self, filename='notes.pickle'):
+        with open(filename, 'wb') as file:
+            pickle.dump(self.notes, file)
+
+    def load_notes(self, filename='notes.pickle'):
+        try:
+            with open(filename, 'rb') as file:
+                self.notes = pickle.load(file)
+        except FileNotFoundError:
+            print("No notes found.")
 
     def find(self, name):
         return self.data.get(name)
@@ -266,8 +283,8 @@ def input_error(func):
     return wrapper
 
 @input_error
-def add_note(title, content):
-    address_book.notes.append({"title": title, "content": content})
+def add_note(title, content, tag=None):
+    address_book.notes.append({"title": title, "content": content, "tag": tag})
     return "Note successfully added!"
 
 
@@ -280,12 +297,17 @@ def view_notes():
             print(f"\nNote {i + 1}:")
             print(f"Title: {note['title']}")
             print(f"Content: {note['content']}")
+            print(f"Tag: {note.get('tag', 'No Tag')}")
 
 
 @input_error
-def search_by_tag():
-    tag_to_search = input("Enter the tag to search for: ")
-    matching_notes = [note for note in notes if tag_to_search.lower() in map(str.lower, note['tags'])]
+def search_by_tag(*tag):
+    if not tag:
+        tag_to_search = input("Enter the tag to search for: ")
+    else:
+        tag_to_search = tag[0]
+
+    matching_notes = [note for note in address_book.notes if note.get('tag') == tag_to_search]
 
     if matching_notes:
         print(f"\nFound notes with tag '{tag_to_search}':")
@@ -293,7 +315,7 @@ def search_by_tag():
             print(f"\nNote {i + 1}:")
             print(f"Title: {note['title']}")
             print(f"Text: {note['content']}")
-            print(f"Tags: {', '.join(note['tags'])}")
+            print(f"Tag: {note.get('tag', 'No Tag')}")
     else:
         print(f"No notes found with tag '{tag_to_search}'.")
 
@@ -684,6 +706,8 @@ def func_help():
             '"add adr" name West 141 st. ...\n' +
             '"add brd" name 15.12.1990 ...\n' +
             '"change" name old_phone new_phone\n' +
+            '"change_info" name atribute(phone,birthday,email) old_atribute new_atribut\n' +
+            '"delete_info" - name atribute(phone,birthday,email)\n' +
             '"phone" name\n' +
             '"show all" - for show all information\n' +
             '"good bye", "close", "exit" - for end work\n' +
@@ -697,12 +721,12 @@ COMMANDS = {
         "Phone ": func_search,
         "Show All": func_show_all,
         "Delete ": func_delete,
-        "Search By Tag": func_search, #search_by_tag,
+        "Search By Tag": search_by_tag,
         "Add Email ": func_add_email,
         "Add Adr ": func_add_address,
         "Add brd ": func_add_birthday,
-        "Change": func_change_info,
-        "Delete": func_delete_info,
+        "Change_Info": func_change_info,
+        "Delete_Info": func_delete_info,
         "Search ": func_search_contacts,
         "Sort ": do_sort_folder,
         "Create Note": add_note,
@@ -715,6 +739,7 @@ COMMANDS = {
         "Good Bye": func_exit
 }
 address_book = AddressBook()
+atexit.register(address_book.save_notes)
 
 command_completer = WordCompleter(COMMANDS, ignore_case=True)
 
@@ -723,6 +748,7 @@ def main():
 
     # load data from disk if data is available
     address_book.load_data_from_disk()
+    address_book.load_notes()
   
     while True:
 
