@@ -213,6 +213,9 @@ class Record:
 
 
 class AddressBook(UserDict):
+    def __init__(self):
+        super().__init__()
+        self.notes = []
     def search_contact(self, query):
         matching_contacts = list()
         # Check if the query matches any phone numbers
@@ -226,10 +229,6 @@ class AddressBook(UserDict):
             if query.lower() in record.name.value.lower():
                 matching_contacts.append(record)
         return matching_contacts
-
-      def __init__(self):
-        super().__init__()
-        self.notes = []
 
     def add_record(self, record):
         self.data[record.name.value] = record
