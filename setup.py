@@ -1,12 +1,14 @@
-from setuptools import setup
+from setuptools import setup, find_namespace_packages
 
 setup(
     name='Bot',
     version='1.0',
-    packages=[''],
     url='',
     license='',
     author='',
     author_email='',
-    description=''
+    description='',
+    entry_points={'console_scripts': ['bot_pg15 = Bot.main:main']},
+    packages=find_namespace_packages(),
+
 )
