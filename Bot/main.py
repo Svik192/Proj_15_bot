@@ -701,18 +701,27 @@ def func_help():
             'Number phone in 10 numbers, for example 0001230001\n' +
             'The representation of all commands looks as follows:\n' +
             '"hello" - start work with bot\n' +
-            '"add " name phone1 phone2 ...\n' +
+            '"add contact" name phone1 phone2 ...\n' +
             '"add email" name example@mail.com ...\n' +
             '"add adr" name West 141 st. ...\n' +
             '"add brd" name 15.12.1990 ...\n' +
             '"change" name old_phone new_phone\n' +
             '"change_info" name atribute(phone,birthday,email) old_atribute new_atribut\n' +
             '"delete_info" - name atribute(phone,birthday,email)\n' +
-            '"phone" name\n' +
+            '"phone" name or phone number\n' +
             '"show all" - for show all information\n' +
             '"good bye", "close", "exit" - for end work\n' +
             '"delete" - delete info of name\n' +
-            '"search" - command for search. Just enter "search" and something about contact like name or phone')
+            '"search" - command for search. Just enter "search" and something about contact like name or phone\n'+
+            '"sort" - way to path\n' +
+            'search by tag - enter tag\n' +
+            'create note - title content\n' +
+            'show note - just show all notes\n' +
+            'edit note - note_index_str and new_content\n' +
+            'remove note - note_index_str\n' +
+            'help - get help for commands\n' +
+            'close, exit, good bye - for quit from bot')
+
 
 COMMANDS = {
         "Hello": func_hello,
