@@ -1,0 +1,2 @@
+[console_scripts]
+bot_pg15 = .main:main

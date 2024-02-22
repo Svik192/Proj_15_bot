@@ -5,3 +5,6 @@
 /.idea/vcs.xml
 /.idea/workspace.xml
 /venv/
+/Bot/v2/Bot.egg-info/
+/Bot.egg-info/
+/our_bot_pg15.egg-info/
