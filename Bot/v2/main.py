@@ -1,8 +1,7 @@
 import re
 import shutil
-import pickle
 import atexit
-import pickle as p
+import pickle
 from pathlib import Path
 from datetime import datetime
 from collections import UserDict
@@ -60,9 +59,11 @@ class Field:
 
 
 class Field2:
+
     def __init__(self, value):
         self.__value = None
         self.value = value
+        self.error_message = "Invalid value"
 
     def is_valid(self, value):
         return True
@@ -76,7 +77,7 @@ class Field2:
         if self.is_valid(value):
             self.__value = value
         else:
-            raise ValueError("Invalid value")
+            raise ValueError(self.error_message)
 
     def __str__(self):
         return str(self.__value)
@@ -95,20 +96,25 @@ class Birthday(Field):
     def value(self, value):
         if is_valid_birthday(value):
             day, month, year = value.split(".")
-            new_value = datetime(day=int(day), month=int(month), year=int(year))
+            new_value = datetime(day=int(day), month=int(month), year=int(year)).date()
             self.__value = new_value
         else:
-            raise ValueError("Invalid value birthday")
+            raise ValueError("Invalid value birthday. Need dd.mm.yyyy")
 
-    def __repr__(self):
-        return f'{self.value.strftime("%d %B %Y")}'
+    def __str__(self):
+        return f'{self.value.strftime("%d.%m.%Y")}'
 
 
 class Email(Field2):
+    def __init__(self, value):
+        super().__init__(None)
+        self.error_message = "Wrong email. Try again"
+        self.value = value
+
     def is_valid(self, email):
         if email is None:
             return True
-        pattern = r'^[\w\.-]+@[a-zA-Z\d\.-]+\.[a-zA-Z]{v2,}'
+        pattern = r'^[\w\.-]+@[a-zA-Z\d\.-]+\.[a-zA-Z]{2,}$'
         return re.match(pattern, email) is not None
 
 
@@ -161,7 +167,7 @@ class Phone(Field):
         if is_valid_phone(value) and value.isdigit() and len(value) == 10:
             self.__value = value
         else:
-            raise ValueError
+            raise ValueError("Invalid value phone, need 10 numbers")
 
     def __repr__(self):
         return f'{self.value}'
@@ -213,9 +219,6 @@ class Record:
                 return p
         return None
 
-    def __str__(self):
-        return (f"{self.name}\t{', '.join(str(p) for p in self.phones)}\t{self.birthday}\t{self.email}\t{self.address}")
-
 
 class AddressBook(UserDict):
     def __init__(self):
@@ -251,6 +254,7 @@ class AddressBook(UserDict):
         try:
             with open(filename, 'rb') as file:
                 self.notes = pickle.load(file)
+
         except FileNotFoundError:
             print("No notes found.")
 
@@ -263,14 +267,15 @@ class AddressBook(UserDict):
 
     def save_data_to_disk(self, filename='address_book.pickle'):
         with open(filename, 'wb') as file:
-            p.dump(self.data, file)
+            pickle.dump(self.data, file)
 
     def load_data_from_disk(self, filename='address_book.pickle'):
         try:
             with open(filename, 'rb') as file:
-                self.data = p.load(file)
+                self.data = pickle.load(file)
+            return True
         except FileNotFoundError:
-            return f'file {func_delete} not find.'
+            return False
 
     def __str__(self) -> str:
         return "\n".join(str(r) for r in self.data.values())
@@ -281,8 +286,7 @@ def input_error(func):
         try:
             return func(*args, **kwargs)
         except (TypeError, KeyError, ValueError, IndexError) as e:
-            return type(e).__name__, e
-            # return f"Error: {e}"
+            return f"Error: {type(e).__name__}, {e}"
 
     return wrapper
 
@@ -369,17 +373,13 @@ def is_valid_phone(phone):
 
 
 @input_error
-def is_valid_birthday(value):
-    pattern = r'\d{v2}\.\d{v2}\.\d{4}'
-    search = re.findall(pattern, value)
-    if value == search[0]:
-        day, month, year = value.split(".")
-        try:
-            new_value = datetime(day=int(day), month=int(month), year=int(year))
-            return True
-        except ValueError:
-            return False
-    else:
+def is_valid_birthday(str_birthday):
+    if str_birthday is None:
+        return True
+    try:
+        datetime.strptime(str_birthday, '%d.%m.%Y').date()
+        return True
+    except ValueError:
         return False
 
 
@@ -471,16 +471,22 @@ def func_add(*args):  # function for add name and phone
     return "Info saved successfully."
 
 
+@input_error
 def func_add_email(name, email):
     if not address_book.find(name):
         record = Record(name, email=email)
     else:
         record = address_book.find(name)
-    record.email = email
+
+    print(record)
+
+    record.email = Email(email)
+
     address_book.add_record(record)
     return "Email saved successfully."
 
 
+@input_error
 def func_add_birthday(name, birthday):
     if not address_book.find(name):
         record = Record(name, birthday=birthday)
@@ -535,7 +541,28 @@ def func_search(*args):  # шукає інформацію про користу
 
 @input_error
 def func_show_all(*args):
-    return str(address_book)
+    if not address_book:
+        return "No contacts available."
+
+    header = ("+----------------------"
+              "+------------------------------------------"
+              "+-----------------+"
+              "--------------------------------"
+              "+----------------------------------------------------+")
+
+    result = ""
+    for values in address_book.values():
+        data = "| {:<20} | {:<40} | {:<15} | {:<30} | {:<50} |".format(
+            str(values.name),
+            str(', '.join(str(p) for p in values.phones)),
+            str(values.birthday),
+            str(values.email),
+            str(values.address)
+        )
+        result += f"{header}\n{data}\n"
+
+    result += f"{header}"
+    return result
 
 
 @input_error
@@ -716,7 +743,7 @@ COMMANDS = {
     "Search By Tag": search_by_tag,
     "Add Email ": func_add_email,
     "Add Adr ": func_add_address,
-    "Add brd ": func_add_birthday,
+    "Add Brd ": func_add_birthday,
     "Change_Info": func_change_info,
     "Delete_Info": func_delete_info,
     "Search ": func_search_contacts,
@@ -738,15 +765,19 @@ command_completer = WordCompleter(COMMANDS, ignore_case=True)
 
 def main():
     # load data from disk if data is available
-    address_book.load_data_from_disk()
+    if not address_book.load_data_from_disk():
+        print("File address_book.pickle not find. Data not loaded!")
+
+    print(func_show_all())
+
     address_book.load_notes()
 
     while True:
 
-        # user_input = input('Please, enter the valid command: ')
+        user_input = input('Please, enter the valid command: ')
         # ЗАПУСКАЙТЕ ЧЕРЕЗ TERMINAL: python maim.py
         # АБО відкоментуйте рядок вище, закоментуйте нижче для виключення prompt та запуску в IDLE
-        user_input = prompt("Please, enter the valid command: ", completer=command_completer)
+        # user_input = prompt("Please, enter the valid command: ", completer=command_completer)
 
         if user_input.lower() in ["exit", "close", "good bye"]:
             print(func_exit())
@@ -1174,8 +1205,8 @@ def main_ui():  # Определяем функцию main
 
         pygame.display.flip()  # Обновляем экран
 
+    address_book.save_data_to_disk()
 
-address_book.save_data_to_disk()
 
 if __name__ == '__main__':  # Если файл запущен напрямую
 
